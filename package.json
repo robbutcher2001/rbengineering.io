@@ -1,0 +1,25 @@
+{
+  "name": "rbengineering.io",
+  "version": "0.0.1",
+  "description": "Content for company domain",
+  "private": true,
+  "scripts": {
+    "build": "NODE_ENV=production webpack --config webpack/config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robbutcher2001/rbengineering.io.git"
+  },
+  "author": "Rob Butcher",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/robbutcher2001/rbengineering.io/issues"
+  },
+  "homepage": "https://github.com/robbutcher2001/rbengineering.io#readme",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.0"
+  }
+}
