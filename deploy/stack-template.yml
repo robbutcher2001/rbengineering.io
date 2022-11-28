@@ -1,0 +1,12 @@
+Transform: "AWS::Serverless-2016-10-31"
+Description: RButcher Engineering Stack
+Resources:
+  # S3 Buckets
+  RBEngFrontEndBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName:
+        Fn::Join: ["-", ["rb-eng-front-end", !Ref Env]]
+      VersioningConfiguration:
+        Status: Enabled
