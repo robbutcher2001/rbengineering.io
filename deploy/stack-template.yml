@@ -1,12 +1,102 @@
 Transform: "AWS::Serverless-2016-10-31"
-Description: RButcher Engineering Stack
+Description: RButcher Engineering Stack Test
+Parameters:
+  PublicURL:
+    Type: String
+  DNSCertARN:
+    Type: String
 Resources:
-  # S3 Buckets
   RBEngFrontEndBucket:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName:
-        Fn::Join: ["-", ["rb-eng-front-end", !Ref Env]]
-      VersioningConfiguration:
-        Status: Enabled
+      BucketName: rb-eng-front-end-test
+  RBEngFrontEndBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RBEngFrontEndBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action:
+              - "s3:GetObject"
+            Resource:
+              Fn::Join: ["", [!GetAtt RBEngFrontEndBucket.Arn, "/*"]]
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${RBEngDistribution}
+  RBEngOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Description: S3 Bucket Access
+        Name: s3_access
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+  RBEngDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: RBEng Distro
+        Aliases:
+          - !Ref PublicURL
+          - Fn::Join: [".", ["www", !Ref PublicURL]]
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        ViewerCertificate:
+          AcmCertificateArn: !Ref DNSCertARN
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        Origins:
+          - DomainName: !GetAtt RBEngFrontEndBucket.DomainName
+            Id:
+              Fn::Join:
+                ["-", ["origin", !GetAtt RBEngFrontEndBucket.DomainName]]
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref RBEngOriginAccessControl
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          TargetOriginId:
+            Fn::Join: ["-", ["origin", !GetAtt RBEngFrontEndBucket.DomainName]]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+  RBEngHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: "RBEng Hosted Zone"
+      Name: !Ref PublicURL
+  RBEngDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref RBEngHostedZone
+      Name: !Ref PublicURL
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt RBEngDistribution.DomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: Z2FDTNDATAQYW2
+  RBEngWWWDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref RBEngHostedZone
+      Name:
+        Fn::Join: [".", ["www", !Ref PublicURL]]
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt RBEngDistribution.DomainName
+        EvaluateTargetHealth: false
+        HostedZoneId: Z2FDTNDATAQYW2
