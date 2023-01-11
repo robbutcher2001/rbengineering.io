@@ -1,5 +1,5 @@
 Transform: "AWS::Serverless-2016-10-31"
-Description: RButcher Engineering Stack Test
+Description: RButcher Engineering Stack
 Parameters:
   PublicURL:
     Type: String
@@ -10,7 +10,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: rb-eng-front-end-test
+      BucketName: rb-eng-front-end
   RBEngFrontEndBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
